@@ -24,7 +24,7 @@ func getDB() *mgo.Database {
 }
 
 func main() {
-	findNesting()
+	findPage()
 }
 
 // 查找单条记录
@@ -145,6 +145,57 @@ func findNesting() {
 	}
 	fmt.Println(users)
 	// output: {Tom 20 [{dog}]}
+}
+
+// 排序
+// 使用Sort函数
+// func (q *Query) Sort(fields ...string) *Query
+func findSort() {
+	db := getDB()
+
+	c := db.C("user")
+
+	type User struct {
+		Id   bson.ObjectId `bson:"_id,omitempty"`
+		Name string        "bson:`name`"
+		Age  int           "bson:`age`"
+	}
+	var users []User
+	// 按照age字段降序排列，如果升序去掉横线"-"就可以了
+	err := c.Find(nil).Sort("-age").All(&users)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(users)
+	// output:
+	// [{ObjectIdHex("56fdce98189df8759fd61e5d") Anny 28} ...]
+	// ...
+}
+
+// 分页查询
+// 使用Skip函数和Limit函数
+// func (q *Query) Skip(n int) *Query
+// func (q *Query) Limit(n int) *Query
+func findPage() {
+	db := getDB()
+
+	c := db.C("user")
+
+	type User struct {
+		Id   bson.ObjectId `bson:"_id,omitempty"`
+		Name string        "bson:`name`"
+		Age  int           "bson:`age`"
+	}
+	var users []User
+	// 表示从偏移位置为2的地方开始取两条记录
+	err := c.Find(nil).Sort("-age").Skip(2).Limit(2).All(&users)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(users)
+	// output:
+	// [{ObjectIdHex("56fdce98189df8759fd61e5d") Anny 20} ...]
+	// ...
 }
 
 // 查找数据总数
