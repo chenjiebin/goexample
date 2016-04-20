@@ -1,5 +1,4 @@
 // 解压zip文件
-
 package main
 
 import (
@@ -11,17 +10,16 @@ import (
 )
 
 func main() {
-	// Open a zip archive for reading.
-	r, err := zip.OpenReader("Archive.zip")
+	// 打开一个zip格式文件
+	r, err := zip.OpenReader("file.zip")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer r.Close()
 
-	// Iterate through the files in the archive,
-	// printing some of their contents.
+	// 迭代压缩文件中的文件，打印出文件中的内容
 	for _, f := range r.File {
-		fmt.Printf("Contents of %s:\n", f.Name)
+		fmt.Printf("文件名 %s:\n", f.Name)
 		rc, err := f.Open()
 		if err != nil {
 			log.Fatal(err)
