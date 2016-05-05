@@ -1,5 +1,4 @@
 // 演示mongodb update操作
-// func (c *Collection) Update(selector interface{}, update interface{}) error
 package main
 
 import (
@@ -25,6 +24,8 @@ func main() {
 	updateAll()
 }
 
+// 更新单条记录
+//	func (c *Collection) Update(selector interface{}, update interface{}) error
 func update() {
 	// 更新前数据：
 	//	{
@@ -93,6 +94,7 @@ func updateBySet() {
 }
 
 // 批量更新数据
+//	func (c *Collection) UpdateAll(selector interface{}, update interface{}) (info *ChangeInfo, err error)
 func updateAll() {
 	selector := bson.M{"name": "Tom"}
 	data := bson.M{"$set": bson.M{"age": 22}}
