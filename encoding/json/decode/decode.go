@@ -20,6 +20,7 @@ func main() {
 	type Message struct {
 		Name, Text string
 	}
+
 	dec := json.NewDecoder(strings.NewReader(jsonStream))
 
 	// read open bracket

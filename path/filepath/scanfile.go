@@ -14,10 +14,18 @@ func main() {
 				return err
 			}
 			if f.IsDir() {
-				fmt.Println(path)
+				fmt.Println("dir:", path)
 				return nil
 			}
-			fmt.Println(path)
+			fmt.Println("file:", path)
 			return nil
 		})
+	// output:
+	//	dir: ./
+	//	dir: 2016
+	//	dir: 2016/04
+	//	dir: 2016/04/11
+	//	dir: 2016/04/12
+	//	file: 2016/04/12/1.log
+	//	file: recursion.go
 }
