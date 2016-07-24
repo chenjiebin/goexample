@@ -1,0 +1,7 @@
+total 32
+drwxr-xr-x  6 chenjiebin  staff  204 Jul 24 22:25 .
+drwxr-xr-x  3 chenjiebin  staff  102 Jul 24 06:38 ..
+-rw-r--r--  1 chenjiebin  staff  705 Jul 24 22:34 exec.go
+-rw-r--r--  1 chenjiebin  staff  532 Jul 24 22:33 redirect.go
+-rw-r--r--  1 chenjiebin  staff  528 Jul 24 22:32 start.go
+-rw-------  1 chenjiebin  staff  354 Jul 24 22:25 stdout.log
