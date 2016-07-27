@@ -1,6 +1,6 @@
 // golang中时间相关操作,主要是用time包的函数，time中最主要又包含了time.Time这个对象
 // 作者：陈杰斌
-// 参考地址：http://www.01happy.com/golang-os-exec/
+// 参考地址：http://www.01happy.com/golang-time/
 package main
 
 import (
