@@ -18,6 +18,9 @@ func main() {
 	h2 := md5.New()
 	h2.Write([]byte("The fog is getting thicker!"))
 	h2.Write([]byte("And Leon's getting laaarger!"))
+
+	v := fmt.Sprintf("%x\n", h2.Sum(nil))
+	fmt.Println(v)
 	fmt.Printf("%x\n", h2.Sum(nil))
 	// output: e2c569be17396eca2a2e3c11578123ed
 }
