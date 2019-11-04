@@ -153,7 +153,6 @@ func main() {
 	dbFile := "blockchain.db"
 	db, err := bolt.Open(dbFile, 0600, nil)
 	if err != nil {
-		fmt.Println("111")
 		log.Fatal(err)
 	}
 	defer db.Close()
@@ -161,9 +160,8 @@ func main() {
 	db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("BlocksBucket"))
 		c := b.Cursor()
-		for k, v := c.First(); k != nil; k, v = c.Next() {
+		for k, v := c.First(); k != nil && string(k[:]) != "l"; k, v = c.Next() {
 			fmt.Printf("key = %s, value = %s\n", k, v)
-			fmt.Println()
 
 			block := DeserializeBlock(v)
 			fmt.Printf("Prev. hash: %x\n", block.PrevBlockHash)
