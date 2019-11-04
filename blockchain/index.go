@@ -37,6 +37,9 @@ func (b *Block) Serialize() []byte {
 	encoder := gob.NewEncoder(&result)
 
 	err := encoder.Encode(b)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	return result.Bytes()
 }
@@ -47,6 +50,9 @@ func DeserializeBlock(d []byte) *Block {
 
 	decoder := gob.NewDecoder(bytes.NewReader(d))
 	err := decoder.Decode(&block)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	return &block
 }
@@ -65,8 +71,8 @@ func NewBlock(data string, prevBlockHash []byte) *Block {
 // 区块链数据结构
 // 此处开始有区块链的数据结构和相应方法
 type Blockchain struct {
-	blocks []*Block
-	db     *bolt.DB
+	tip []byte
+	db  *bolt.DB
 }
 
 // 增加新块
@@ -74,7 +80,7 @@ func (bc *Blockchain) AddBlock(data string) {
 	var lastHash []byte
 
 	err := bc.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(blocksBucket))
+		b := tx.Bucket([]byte("BlocksBucket"))
 		lastHash = b.Get([]byte("l"))
 
 		return nil
@@ -84,13 +90,19 @@ func (bc *Blockchain) AddBlock(data string) {
 	newBlock := NewBlock(data, lastHash)
 
 	err = bc.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(blocksBucket))
+		b := tx.Bucket([]byte("BlocksBucket"))
 		err := b.Put(newBlock.Hash, newBlock.Serialize())
 		err = b.Put([]byte("l"), newBlock.Hash)
 		bc.tip = newBlock.Hash
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		return nil
 	})
+	if err != nil {
+		log.Fatal(err)
+	}
 	// bc.blocks = append(bc.blocks, newBlock)
 }
 
@@ -102,13 +114,14 @@ func NewGenesisBlock() *Block {
 // 实例化一个区块链
 func NewBlockchain() *Blockchain {
 	var tip []byte
+	dbFile := "blockchain.db"
 	db, err := bolt.Open(dbFile, 0600, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
-	err = db.Updae(func(tx *bolt.Tx) error {
+	err = db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("BlocksBucket"))
 		// 如果bucket不存在，则进行初始化创世区块，并创建新bucket
 		if b == nil {
@@ -116,6 +129,9 @@ func NewBlockchain() *Blockchain {
 			b, err := tx.CreateBucket([]byte("BlocksBucket"))
 			err = b.Put(genesis.Hash, genesis.Serialize())
 			err = b.Put([]byte("l"), genesis.Hash)
+			if err != nil {
+				log.Fatal(err)
+			}
 			tip = genesis.Hash
 		} else {
 			tip = b.Get([]byte("l"))
@@ -123,6 +139,9 @@ func NewBlockchain() *Blockchain {
 
 		return nil
 	})
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	bc := Blockchain{tip, db}
 
@@ -136,15 +155,34 @@ func main() {
 	bc.AddBlock("Send 1 BTC to Ivan")
 	bc.AddBlock("Send 2 more BTC to Ivan")
 
-	for _, block := range bc.blocks {
-		fmt.Printf("Prev. hash: %x\n", block.PrevBlockHash)
-		fmt.Printf("Data: %s\n", block.Data)
-		fmt.Printf("Hash: %x\n", block.Hash)
-
-		pow := NewProofOfWork(block)
-		fmt.Printf("Pow:%s\n", strconv.FormatBool(pow.Validate()))
-		fmt.Println()
+	// bolt遍历输出
+	dbFile := "blockchain.db"
+	db, err := bolt.Open(dbFile, 0600, nil)
+	if err != nil {
+		fmt.Println("111")
+		log.Fatal(err)
 	}
+	defer db.Close()
+
+	db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte("BlocksBucket"))
+		c := b.Cursor()
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			fmt.Printf("key=%s, value=%s\n", k, v)
+		}
+		return nil
+	})
+
+	// 没有引入bolt前的输出方式
+	// for _, block := range bc.blocks {
+	// 	fmt.Printf("Prev. hash: %x\n", block.PrevBlockHash)
+	// 	fmt.Printf("Data: %s\n", block.Data)
+	// 	fmt.Printf("Hash: %x\n", block.Hash)
+
+	// 	pow := NewProofOfWork(block)
+	// 	fmt.Printf("Pow:%s\n", strconv.FormatBool(pow.Validate()))
+	// 	fmt.Println()
+	// }
 }
 
 // 此处开始挖矿部分
