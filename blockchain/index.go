@@ -35,25 +35,19 @@ func (b *Block) SetHash() {
 func (b *Block) Serialize() []byte {
 	var result bytes.Buffer
 	encoder := gob.NewEncoder(&result)
-
-	err := encoder.Encode(b)
-	if err != nil {
-		log.Fatal(err)
+	if err := encoder.Encode(b); err != nil {
+		log.Fatalln("encode error:", err)
 	}
-
 	return result.Bytes()
 }
 
 // 对块进行反序列化
-func DeserializeBlock(d []byte) *Block {
+func DeserializeBlock(b []byte) *Block {
 	var block Block
-
-	decoder := gob.NewDecoder(bytes.NewReader(d))
-	err := decoder.Decode(&block)
-	if err != nil {
-		log.Fatal(err)
+	decoder := gob.NewDecoder(bytes.NewReader(b))
+	if err := decoder.Decode(&block); err != nil {
+		log.Fatalln("decode error:", err)
 	}
-
 	return &block
 }
 
@@ -150,10 +144,10 @@ func NewBlockchain() *Blockchain {
 
 // 主函数
 func main() {
-	bc := NewBlockchain()
+	// bc := NewBlockchain()
 
-	bc.AddBlock("Send 1 BTC to Ivan")
-	bc.AddBlock("Send 2 more BTC to Ivan")
+	// bc.AddBlock("Send 1 BTC to Ivan")
+	// bc.AddBlock("Send 2 more BTC to Ivan")
 
 	// bolt遍历输出
 	dbFile := "blockchain.db"
@@ -168,7 +162,17 @@ func main() {
 		b := tx.Bucket([]byte("BlocksBucket"))
 		c := b.Cursor()
 		for k, v := c.First(); k != nil; k, v = c.Next() {
-			fmt.Printf("key=%s, value=%s\n", k, v)
+			fmt.Printf("key = %s, value = %s\n", k, v)
+			fmt.Println()
+
+			block := DeserializeBlock(v)
+			fmt.Printf("Prev. hash: %x\n", block.PrevBlockHash)
+			fmt.Printf("Data: %s\n", block.Data)
+			fmt.Printf("Hash: %x\n", block.Hash)
+
+			pow := NewProofOfWork(block)
+			fmt.Printf("Pow:%s\n", strconv.FormatBool(pow.Validate()))
+			fmt.Println()
 		}
 		return nil
 	})
