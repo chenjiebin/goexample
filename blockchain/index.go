@@ -3,11 +3,15 @@ package main
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/gob"
 	"fmt"
+	"log"
 	"math"
 	"math/big"
 	"strconv"
 	"time"
+
+	"github.com/boltdb/bolt"
 )
 
 // 块实例
@@ -27,6 +31,26 @@ func (b *Block) SetHash() {
 	b.Hash = hash[:]
 }
 
+// 快实例序列化对象
+func (b *Block) Serialize() []byte {
+	var result bytes.Buffer
+	encoder := gob.NewEncoder(&result)
+
+	err := encoder.Encode(b)
+
+	return result.Bytes()
+}
+
+// 对块进行反序列化
+func DeserializeBlock(d []byte) *Block {
+	var block Block
+
+	decoder := gob.NewDecoder(bytes.NewReader(d))
+	err := decoder.Decode(&block)
+
+	return &block
+}
+
 // 创建新块
 func NewBlock(data string, prevBlockHash []byte) *Block {
 	block := &Block{time.Now().Unix(), []byte(data), prevBlockHash, []byte{}, 0}
@@ -39,15 +63,35 @@ func NewBlock(data string, prevBlockHash []byte) *Block {
 }
 
 // 区块链数据结构
+// 此处开始有区块链的数据结构和相应方法
 type Blockchain struct {
 	blocks []*Block
+	db     *bolt.DB
 }
 
 // 增加新块
 func (bc *Blockchain) AddBlock(data string) {
-	prevBlock := bc.blocks[len(bc.blocks)-1]
-	newBlock := NewBlock(data, prevBlock.Hash)
-	bc.blocks = append(bc.blocks, newBlock)
+	var lastHash []byte
+
+	err := bc.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(blocksBucket))
+		lastHash = b.Get([]byte("l"))
+
+		return nil
+	})
+
+	// prevBlock := bc.blocks[len(bc.blocks)-1]
+	newBlock := NewBlock(data, lastHash)
+
+	err = bc.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(blocksBucket))
+		err := b.Put(newBlock.Hash, newBlock.Serialize())
+		err = b.Put([]byte("l"), newBlock.Hash)
+		bc.tip = newBlock.Hash
+
+		return nil
+	})
+	// bc.blocks = append(bc.blocks, newBlock)
 }
 
 // 初始化创世区块
@@ -57,9 +101,35 @@ func NewGenesisBlock() *Block {
 
 // 实例化一个区块链
 func NewBlockchain() *Blockchain {
-	return &Blockchain{[]*Block{NewGenesisBlock()}}
+	var tip []byte
+	db, err := bolt.Open(dbFile, 0600, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	err = db.Updae(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte("BlocksBucket"))
+		// 如果bucket不存在，则进行初始化创世区块，并创建新bucket
+		if b == nil {
+			genesis := NewGenesisBlock()
+			b, err := tx.CreateBucket([]byte("BlocksBucket"))
+			err = b.Put(genesis.Hash, genesis.Serialize())
+			err = b.Put([]byte("l"), genesis.Hash)
+			tip = genesis.Hash
+		} else {
+			tip = b.Get([]byte("l"))
+		}
+
+		return nil
+	})
+
+	bc := Blockchain{tip, db}
+
+	return &bc
 }
 
+// 主函数
 func main() {
 	bc := NewBlockchain()
 
@@ -77,6 +147,7 @@ func main() {
 	}
 }
 
+// 此处开始挖矿部分
 const targetBits = 12
 
 type ProofOfWork struct {
@@ -143,6 +214,7 @@ func (pow *ProofOfWork) Validate() bool {
 	return isValid
 }
 
+// 整形转换成16进制输出
 func IntToHex(n int64) []byte {
 	return []byte(strconv.FormatInt(n, 16))
 }
