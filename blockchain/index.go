@@ -144,7 +144,7 @@ func NewBlockchain() *Blockchain {
 
 // 主函数
 func main() {
-	// bc := NewBlockchain()
+	NewBlockchain()
 
 	// bc.AddBlock("Send 1 BTC to Ivan")
 	// bc.AddBlock("Send 2 more BTC to Ivan")
@@ -171,7 +171,7 @@ func main() {
 			fmt.Printf("Hash: %x\n", block.Hash)
 
 			pow := NewProofOfWork(block)
-			fmt.Printf("Pow:%s\n", strconv.FormatBool(pow.Validate()))
+			fmt.Printf("Pow: %s\n", strconv.FormatBool(pow.Validate()))
 			fmt.Println()
 		}
 		return nil
