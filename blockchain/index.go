@@ -84,6 +84,7 @@ func (bc *Blockchain) AddBlock(data string) {
 
 	// prevBlock := bc.blocks[len(bc.blocks)-1]
 	newBlock := NewBlock(data, lastHash)
+	fmt.Println("AddBlock newBlock", newBlock)
 
 	err = bc.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("BlocksBucket"))
@@ -226,6 +227,7 @@ func main() {
 	bc := NewBlockchain()
 	defer bc.db.Close()
 
+	fmt.Println("cli start")
 	cli := CLI{bc}
 	cli.Run()
 
