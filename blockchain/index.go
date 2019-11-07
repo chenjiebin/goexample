@@ -184,6 +184,7 @@ func (cli *CLI) Run() {
 	}
 
 	if printChainCmd.Parsed() {
+		fmt.Println("cli printChain")
 		cli.printChain()
 	}
 }
@@ -199,9 +200,8 @@ func (cli *CLI) printChain() {
 	dbFile := "blockchain.db"
 	db, err := bolt.Open(dbFile, 0600, nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln("bolt open error", err)
 	}
-	defer db.Close()
 
 	db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("BlocksBucket"))
