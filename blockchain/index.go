@@ -74,13 +74,13 @@ type Blockchain struct {
 // 增加新块
 func (bc *Blockchain) AddBlock(data string) {
 	var lastHash []byte
-
 	err := bc.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("BlocksBucket"))
 		lastHash = b.Get([]byte("l"))
 
 		return nil
 	})
+	fmt.Println("AddBlock lastHash", lastHash)
 
 	// prevBlock := bc.blocks[len(bc.blocks)-1]
 	newBlock := NewBlock(data, lastHash)
@@ -97,7 +97,7 @@ func (bc *Blockchain) AddBlock(data string) {
 		return nil
 	})
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln("db.Update error", err)
 	}
 	// bc.blocks = append(bc.blocks, newBlock)
 }
@@ -113,9 +113,8 @@ func NewBlockchain() *Blockchain {
 	dbFile := "blockchain.db"
 	db, err := bolt.Open(dbFile, 0600, nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln("bolt open error", err)
 	}
-	defer db.Close()
 
 	err = db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("BlocksBucket"))
@@ -157,8 +156,9 @@ func (cli *CLI) Run() {
 	printChainCmd := flag.NewFlagSet("printchain", flag.ExitOnError)
 
 	addBlockData := addBlockCmd.String("data", "", "Block data")
+	fmt.Println("addBlockData", addBlockData)
 
-	switch os.Args[1] {index.go 
+	switch os.Args[1] {
 	case "addblock":
 		err := addBlockCmd.Parse(os.Args[2:])
 		if err != nil {
@@ -195,24 +195,6 @@ func (cli *CLI) addBlock(data string) {
 
 // 命令行打印区块链
 func (cli *CLI) printChain() {
-	// bci := cli.bc.Iterator()
-
-	// for {
-	// 	block := bci.Next()
-
-	// 	fmt.Printf("Prev. hash: %x\n", block.PrevBlockHash)
-	// 	fmt.Printf("Data: %s\n", block.Data)
-	// 	fmt.Printf("Hash: %x\n", block.Hash)
-	// 	pow := NewProofOfWork(block)
-	// 	fmt.Printf("PoW: %s\n", strconv.FormatBool(pow.Validate()))
-	// 	fmt.Println()
-
-	// 	if len(block.PrevBlockHash) == 0 {
-	// 		break
-	// 	}
-	// }
-
-	// bolt遍历输出
 	dbFile := "blockchain.db"
 	db, err := bolt.Open(dbFile, 0600, nil)
 	if err != nil {
