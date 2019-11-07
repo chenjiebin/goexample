@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/gob"
+	"flag"
 	"fmt"
 	"log"
 	"math"
 	"math/big"
+	"os"
 	"strconv"
 	"time"
 
@@ -142,12 +144,73 @@ func NewBlockchain() *Blockchain {
 	return &bc
 }
 
-// 主函数
-func main() {
-	NewBlockchain()
+// 命令行交互部分
+type CLI struct {
+	bc *Blockchain
+}
 
-	// bc.AddBlock("Send 1 BTC to Ivan")
-	// bc.AddBlock("Send 2 more BTC to Ivan")
+// 命令行运行方法
+func (cli *CLI) Run() {
+	// cli.validateArgs()
+
+	addBlockCmd := flag.NewFlagSet("addblock", flag.ExitOnError)
+	printChainCmd := flag.NewFlagSet("printchain", flag.ExitOnError)
+
+	addBlockData := addBlockCmd.String("data", "", "Block data")
+
+	switch os.Args[1] {index.go 
+	case "addblock":
+		err := addBlockCmd.Parse(os.Args[2:])
+		if err != nil {
+			log.Fatalln("parse arg error")
+		}
+	case "printchain":
+		err := printChainCmd.Parse(os.Args[2:])
+		if err != nil {
+			log.Fatalln("parse arg error")
+		}
+	default:
+		// cli.printUsage()
+		os.Exit(1)
+	}
+
+	if addBlockCmd.Parsed() {
+		if *addBlockData == "" {
+			addBlockCmd.Usage()
+			os.Exit(1)
+		}
+		cli.addBlock(*addBlockData)
+	}
+
+	if printChainCmd.Parsed() {
+		cli.printChain()
+	}
+}
+
+// 命令行增加新块
+func (cli *CLI) addBlock(data string) {
+	cli.bc.AddBlock(data)
+	fmt.Println("Success!")
+}
+
+// 命令行打印区块链
+func (cli *CLI) printChain() {
+	// bci := cli.bc.Iterator()
+
+	// for {
+	// 	block := bci.Next()
+
+	// 	fmt.Printf("Prev. hash: %x\n", block.PrevBlockHash)
+	// 	fmt.Printf("Data: %s\n", block.Data)
+	// 	fmt.Printf("Hash: %x\n", block.Hash)
+	// 	pow := NewProofOfWork(block)
+	// 	fmt.Printf("PoW: %s\n", strconv.FormatBool(pow.Validate()))
+	// 	fmt.Println()
+
+	// 	if len(block.PrevBlockHash) == 0 {
+	// 		break
+	// 	}
+	// }
 
 	// bolt遍历输出
 	dbFile := "blockchain.db"
@@ -174,6 +237,44 @@ func main() {
 		}
 		return nil
 	})
+}
+
+// 主函数
+func main() {
+	bc := NewBlockchain()
+	defer bc.db.Close()
+
+	cli := CLI{bc}
+	cli.Run()
+
+	// bc.AddBlock("Send 1 BTC to Ivan")
+	// bc.AddBlock("Send 2 more BTC to Ivan")
+
+	// bolt遍历输出
+	// dbFile := "blockchain.db"
+	// db, err := bolt.Open(dbFile, 0600, nil)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// defer db.Close()
+
+	// db.View(func(tx *bolt.Tx) error {
+	// 	b := tx.Bucket([]byte("BlocksBucket"))
+	// 	c := b.Cursor()
+	// 	for k, v := c.First(); k != nil && string(k[:]) != "l"; k, v = c.Next() {
+	// 		fmt.Printf("key = %s, value = %s\n", k, v)
+
+	// 		block := DeserializeBlock(v)
+	// 		fmt.Printf("Prev. hash: %x\n", block.PrevBlockHash)
+	// 		fmt.Printf("Data: %s\n", block.Data)
+	// 		fmt.Printf("Hash: %x\n", block.Hash)
+
+	// 		pow := NewProofOfWork(block)
+	// 		fmt.Printf("Pow: %s\n", strconv.FormatBool(pow.Validate()))
+	// 		fmt.Println()
+	// 	}
+	// 	return nil
+	// })
 
 	// 没有引入bolt前的输出方式
 	// for _, block := range bc.blocks {
