@@ -157,7 +157,6 @@ func (cli *CLI) Run() {
 	printChainCmd := flag.NewFlagSet("printchain", flag.ExitOnError)
 
 	addBlockData := addBlockCmd.String("data", "", "Block data")
-	fmt.Println("addBlockData", addBlockData)
 
 	switch os.Args[1] {
 	case "addblock":
@@ -184,7 +183,6 @@ func (cli *CLI) Run() {
 	}
 
 	if printChainCmd.Parsed() {
-		fmt.Println("cli printChain")
 		cli.printChain()
 	}
 }
@@ -197,13 +195,7 @@ func (cli *CLI) addBlock(data string) {
 
 // 命令行打印区块链
 func (cli *CLI) printChain() {
-	dbFile := "blockchain.db"
-	db, err := bolt.Open(dbFile, 0600, nil)
-	if err != nil {
-		log.Fatalln("bolt open error", err)
-	}
-
-	db.View(func(tx *bolt.Tx) error {
+	cli.bc.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("BlocksBucket"))
 		c := b.Cursor()
 		for k, v := c.First(); k != nil && string(k[:]) != "l"; k, v = c.Next() {
