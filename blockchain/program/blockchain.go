@@ -212,6 +212,7 @@ func (bc *Blockchain) FindUnspentTransactions(address string) []Transaction {
 	return unspentTXs
 }
 
+// 获取余额，实际上就是获取交易中的output部分
 func (bc *Blockchain) FindUTXO(address string) []TXOutput {
 	var UTXOs []TXOutput
 	unspentTransactions := bc.FindUnspentTransactions(address)
