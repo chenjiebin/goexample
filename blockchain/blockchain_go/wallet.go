@@ -6,6 +6,7 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
+	"fmt"
 	"log"
 
 	"golang.org/x/crypto/ripemd160"
@@ -62,7 +63,7 @@ func ValidateAddress(address string) bool {
 	version := pubKeyHash[0]
 	pubKeyHash = pubKeyHash[1 : len(pubKeyHash)-addressChecksumLen]
 	targetChecksum := checksum(append([]byte{version}, pubKeyHash...))
-
+	fmt.Println("actualChecksum targetChecksum compare", actualChecksum, targetChecksum)
 	return bytes.Compare(actualChecksum, targetChecksum) == 0
 }
 

@@ -33,7 +33,8 @@ func (cli *CLI) validateArgs() {
 // Run parses command line arguments and processes commands
 func (cli *CLI) Run() {
 	cli.validateArgs()
-
+	fmt.Println(os.Getenv("GOPATH"))
+	fmt.Println(os.Getenv("NODE_ID"))
 	nodeID := os.Getenv("NODE_ID")
 	if nodeID == "" {
 		fmt.Printf("NODE_ID env. var is not set!")
