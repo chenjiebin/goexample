@@ -1,0 +1,1 @@
+这是一个演示tar压缩的readme.txt
