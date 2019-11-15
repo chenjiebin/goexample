@@ -1,21 +1,21 @@
-// tar压缩
+// 官方演示
 package main
 
 import (
 	"archive/tar"
 	"bytes"
+	"fmt"
+	"io"
 	"log"
 	"os"
 )
 
 func main() {
-	// 创建一个缓冲区用来保存压缩文件内容
+	// 将若干文件写入压缩文档
+	// 这边源文件是直接写在代码里哈，然后也没有输出一个文档
+	// 后面会演示源文件进行压缩，然后输出一个tar.gz的压缩文档
 	var buf bytes.Buffer
-	// 创建一个压缩文档
 	tw := tar.NewWriter(&buf)
-
-	// 定义一堆文件
-	// 将文件写入到压缩文档tw
 	var files = []struct {
 		Name, Body string
 	}{
@@ -40,10 +40,22 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// 将压缩文档内容写入文件 file.tar.gz
-	f, err := os.OpenFile("file.tar.gz", os.O_CREATE|os.O_WRONLY, 0666)
-	if err != nil {
-		log.Fatal(err)
+	// 上面压缩了之后，压缩内容都存储在buf这个变量里
+	// 这边遍历输出一下即可
+	tr := tar.NewReader(&buf)
+	for {
+		hdr, err := tr.Next()
+		if err == io.EOF {
+			break // 文件已经遍历完成了
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("%s的文件内容: ", hdr.Name)
+		if _, err := io.Copy(os.Stdout, tr); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println()
 	}
-	buf.WriteTo(f)
+
 }
